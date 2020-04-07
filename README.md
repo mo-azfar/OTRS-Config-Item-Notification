@@ -3,7 +3,7 @@
 - Built for OTRS v6.0.x CE
 - Check Config Item expiring date and if within current month, create ticket to notify agent.
 
-1.Create a new custom cron.  
+1. Create a new custom cron.  
 
 Example:  
 
