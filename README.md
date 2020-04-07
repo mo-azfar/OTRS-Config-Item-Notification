@@ -15,4 +15,5 @@ Admin > System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
 	TaskName => Custom1  
 	
 3. To manually execute cron via Console  
-otrs@shell > /opt/otrs/bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDate  
+
+	otrs@shell > /opt/otrs/bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDate  
