@@ -54,7 +54,7 @@ Example:
 	Schedule => 0 9 * * 1  
 	TaskName => Custom1
 
-Where,
+Where,  
 --queue            #Specify the queue name where the reminder ticket should be create (default: Misc).  
 --ci-date-field    #Specify the config item date field that determine expiring date. #E.g: WarrantyExpirationDate  
 --ci-mark-field    #Specify the config item dropdown field that determine reminder should be create or not. #E.g: RenewalAlert  
