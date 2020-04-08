@@ -33,7 +33,7 @@ Then, do add these additional parameter to get 'marking field'.
 	 	},  
 
 
-So our 2 key name here is **WarrantyExpirationDate** and **RenewalAlert**
+So our 2 key name here is **WarrantyExpirationDate** and **RenewalAlert**  
 
 
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
@@ -55,14 +55,14 @@ Example:
 	TaskName => Custom1
 
 Where,
---queue            #Specify the queue name where the reminder ticket should be create (default: Misc).
---ci-date-field    #Specify the config item date field that determine expiring date. #E.g: WarrantyExpirationDate
---ci-mark-field    #Specify the config item dropdown field that determine reminder should be create or not. #E.g: RenewalAlert
+--queue            #Specify the queue name where the reminder ticket should be create (default: Misc).  
+--ci-date-field    #Specify the config item date field that determine expiring date. #E.g: WarrantyExpirationDate  
+--ci-mark-field    #Specify the config item dropdown field that determine reminder should be create or not. #E.g: RenewalAlert  
 
 
-4. Save then restart your Daemon. It will execute based on schedule value (Every week monday 9.00 am ).
+4. Save then restart your Daemon. It will execute based on schedule value (Every week monday 9.00 am ).  
 
-5. To manually execute cron or test via Console
+5. To manually execute cron or test via Console  
 
 otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --queue Postmaster --ci-date-field WarrantyExpirationDate --ci-mark-field RenewalAlert
 
