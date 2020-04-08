@@ -20,17 +20,17 @@ For example in Hardware class, the date field (WarrantyExpirationDate) already d
 		
 Then, do add these additional parameter to get 'marking field'.  
 
-	 (+)	{  
-	 (+)		Key => 'RenewalAlert',  
-	 (+)		Name => Translatable('Renewal Alert'),  
-	 (+)		Searchable => 1,  
-	 (+)		Input => {  
-	 (+)		    Type => 'GeneralCatalog',  
-	 (+)		    Class => 'ITSM::ConfigItem::YesNo',  
-	 (+)		    Translation => 1,  
-	 (+)		    Required => 1,  
-	 (+)		},  
-	 (+)	},  
+	 	{  
+	 		Key => 'RenewalAlert',  
+	 		Name => Translatable('Renewal Alert'),  
+	 		Searchable => 1,  
+	 		Input => {  
+	 		    Type => 'GeneralCatalog',  
+	 		    Class => 'ITSM::ConfigItem::YesNo',  
+	 		    Translation => 1,  
+	 		    Required => 1,  
+	 		},  
+	 	},  
 
 
 So our 2 key name here is **WarrantyExpirationDate** and **RenewalAlert**
