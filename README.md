@@ -41,6 +41,7 @@ So our 2 key name here is **WarrantyExpirationDate** and **RenewalAlert**
 Example:
 
 	Function => Execute  
+	MaximumParallelInstances => 1  
 	Module => Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2  
 	Params => 
 	
@@ -65,4 +66,10 @@ Where,
 5. To manually execute cron or test via Console  
 
 otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --queue Postmaster --ci-date-field WarrantyExpirationDate --ci-mark-field RenewalAlert
+
+[![donload1.png](https://i.postimg.cc/QMK8WD7T/donload1.png)](https://postimg.cc/HJHDffBY)  
+
+[![donlod2.png](https://i.postimg.cc/SsmPb7mx/donlod2.png)](https://postimg.cc/8Fn4hvF2)  
+
+[![donlod3.png](https://i.postimg.cc/NMPkC1MV/donlod3.png)](https://postimg.cc/PpYDPv1z)  
 
