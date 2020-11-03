@@ -7,11 +7,12 @@
 #running from CONSOLE OR DAEMON
 #
 ##REF http://doc.otrs.com/doc/api/otrs/6.0/Perl/index.html
+##REF: https://otrs.perl-services.de/ITSMConfigurationManagement/rel-6_0
 package Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2;
 
 use strict;
 use warnings;
-use Data::Dumper;
+#use Data::Dumper;
 use Time::Piece;
 use DateTime qw();
 use parent qw(Kernel::System::Console::BaseCommand);

@@ -2,6 +2,12 @@
 - Built for OTRS CE v 6.0.x  
 - Check Config Item expiring date and if within current month and mark with alert 'Yes', create ticket to notify agent.  
 
+	Used CPAN modules:
+	
+		use Time::Piece;
+		use DateTime;
+	
+
 1. In this github, we will using *Hardware* class.  
 
 2. Configure Config Item class to have date field and some marking field.  
