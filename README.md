@@ -23,10 +23,10 @@ Example:
 	WHERE,
 	--class Computer			#search for ci in mention class
 	--date-field WarrantyExpirationDate	#ci date field name that hold expiring date value
-	--depl-state Production	#also search for ci in specific deployment state
-	--depl-state-after Review	#specify the ci deployment state to be set after the check.
-	--check-period 1	#specify the lookup range (from 1 to 3) in month.
-	--queue Raw	#Optional. Specify the queue name where the reminder ticket should be create.
+	--depl-state Production			#also search for ci in specific deployment state
+	--depl-state-after Review			#specify the ci deployment state to be set after the check.
+	--check-period 1			#specify the lookup range (from 1 to 3) in month.
+	--queue Raw			#Optional. Specify the queue name where the reminder ticket should be create.
 	
     	
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
