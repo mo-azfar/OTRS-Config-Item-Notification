@@ -38,12 +38,18 @@ Example:
 	Module => Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2  
 	Params => 
 	
-	--class Computer						
-	--date-field WarrantyExpirationDate 	
-	--depl-state Production					
-	--depl-state-after Review				
-	--check-period 1						
-	--queue Raw				
+	--class 
+	Computer						
+	--date-field 
+	WarrantyExpirationDate 	
+	--depl-state 
+	Production					
+	--depl-state-after 
+	Review				
+	--check-period 
+	1						
+	--queue 
+	Raw				
 			
 	Schedule => 0 9 * * 1  
 	TaskName => Custom1
