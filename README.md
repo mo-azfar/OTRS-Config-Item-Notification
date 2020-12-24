@@ -21,7 +21,7 @@ Example:
 	--depl-state-after Review --check-period 1 --queue Raw 
 
 	WHERE,
-	--class Computer	#search for ci in mention class
+	--class Computer			#search for ci in mention class
 	--date-field WarrantyExpirationDate	#ci date field name that hold expiring date value
 	--depl-state Production	#also search for ci in specific deployment state
 	--depl-state-after Review	#specify the ci deployment state to be set after the check.
