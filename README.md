@@ -16,7 +16,9 @@
 
 Example: 
 
-		otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --class Computer --class Hardware --date-field WarrantyExpirationDate --depl-state Production --depl-state Planned --depl-state-after Review --check-period 1 --queue Raw 
+		otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --class Computer --class Hardware 
+		--date-field WarrantyExpirationDate --depl-state Production --depl-state Planned 
+		--depl-state-after Review --check-period 1 --queue Raw 
 
 		WHERE,
 			--class Computer						#search for ci in mention class
@@ -26,7 +28,7 @@ Example:
 			--check-period 1						#specify the lookup range (from 1 to 3) in month.
 			--queue Raw								#Optional. Specify the queue name where the reminder ticket should be create.
 	
-	
+    	
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
 
 Example:
