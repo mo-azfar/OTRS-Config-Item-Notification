@@ -1,5 +1,3 @@
-#
-# --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
 # did not receive this file, see https://www.gnu.org/licenses/gpl-3.0.txt.
@@ -7,14 +5,14 @@
 #running from CONSOLE OR DAEMON
 #
 ##REF http://doc.otrs.com/doc/api/otrs/6.0/Perl/index.html
-##REF: https://otrs.perl-services.de/ITSMConfigurationManagement/rel-6_0
+#
+# Example: bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --class Computer --class Hardware --date-field WarrantyExpirationDate --depl-state Production --depl-state Planned --depl-state-after Review --check-period 1 --queue Raw
+
 package Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2;
 
 use strict;
 use warnings;
-#use Data::Dumper;
-use Time::Piece;
-use DateTime qw();
+
 use parent qw(Kernel::System::Console::BaseCommand);
 
 our @ObjectDependencies = (
@@ -31,24 +29,52 @@ sub Configure {
     $Self->Description('Process Config Item contract that near expire.');
 	
 	$Self->AddOption(
-        Name        => 'queue',
-        Description => "Specify the queue name where the reminder ticket should be create (default: Misc).",
-        Required    => 0,
-        HasValue    => 1,  
+        Name        => 'class',
+        Description => "Specify the config item class which this check should be perform.",
+        Required    => 1,
+        HasValue    => 1, 
 		ValueRegex  => qr/.*/smx,
+		Multiple    => 1,
     );
-    $Self->AddOption(
-        Name        => 'ci-date-field',
-        Description => "Specify the config item date field that determine expiring date.",
+	
+	$Self->AddOption(
+        Name        => 'depl-state',
+        Description => "Specify the config item deployment state which this check should be perform.",
+        Required    => 1,
+        HasValue    => 1,
+		ValueRegex  => qr/.*/smx,
+		Multiple    => 1,
+    );
+	
+	$Self->AddOption(
+        Name        => 'date-field',
+        Description => "Specify the config item date field name that determine expiring date.",
         Required    => 1,
         HasValue    => 1, 
 		ValueRegex  => qr/.*/smx,
     );
-	 $Self->AddOption(
-        Name        => 'ci-mark-field',
-        Description => "Specify the config item dropdown field that determine reminder should be create or not.",
+	
+	$Self->AddOption(
+        Name        => 'check-period',
+        Description => "Specify the lookup range (from 1 to 3) in month.",
+        Required    => 1,
+        HasValue    => 1, 
+		ValueRegex  => qr/.*/smx,
+    );
+	
+	$Self->AddOption(
+        Name        => 'depl-state-after',
+        Description => "Specify the config item deployment state to be set after the check.",
         Required    => 1,
         HasValue    => 1,
+		ValueRegex  => qr/.*/smx,
+    );
+	
+	$Self->AddOption(
+        Name        => 'queue',
+        Description => "Specify the queue name where the reminder ticket should be create.",
+        Required    => 0,
+        HasValue    => 1,  
 		ValueRegex  => qr/.*/smx,
     );
 
@@ -58,11 +84,14 @@ sub Configure {
 sub Run {
     my ( $Self, %Param ) = @_;
 	
-	my $Queue = $Self->GetOption('queue') // 'Misc';
-	my $DateField = $Self->GetOption('ci-date-field'); #E.g: WarrantyExpirationDate
-	my $MarkField= $Self->GetOption('ci-mark-field');  #E.g: RenewalAlert
+	my @Class = @{ $Self->GetOption('class') // [] }; 					#E.g:	--class Computer --class Software
+	my @DeplState = @{ $Self->GetOption('depl-state') // [] }; 			#E.g:	--depl-state Production --depl-state Planned
+	my $DateField = $Self->GetOption('date-field'); 					#E.g: 	--date-field WarrantyExpirationDate
 	
-	$Self->Print("<yellow>Process effected config item...</yellow>\n\n");
+	my $CheckPeriod = $Self->GetOption('check-period'); 				#E.g:	--check-before 1
+	my $DeplStateAfter = $Self->GetOption('depl-state-after'); 			#E.g:	--depl-state-after Review
+	my $Queue = $Self->GetOption('queue') // '';						#E.g:	--queue Misc
+	
 	#get config item asset object
 	my $ConfigItemObject = $Kernel::OM->Get('Kernel::System::ITSMConfigItem');
 	#get general catalog object
@@ -73,122 +102,220 @@ sub Run {
 	my $ArticleBackendObject = $Kernel::OM->Get('Kernel::System::Ticket::Article')->BackendForChannel(ChannelName => 'Phone');
 	#get link object
 	my $LinkObject = $Kernel::OM->Get('Kernel::System::LinkObject');
-    my $DateTimeObject = $Kernel::OM->Create('Kernel::System::DateTime');
-    my $CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
 	
-	$Self->Print("<yellow>Searching effected config item...</yellow>\n\n");
-	#search ci based on expire date = current month, renewal alert = yes
-	my $ConfigItemIDs1 = $ConfigItemObject->ConfigItemSearchExtended(
-
-        What => [                                                # (optional)
-            # each array element is a and condition
-            {
-                # or condition in hash
-                "[%]{'Version'}[%]{'$DateField'}[%]{'Content'}" => [$CurMonth.'*'],
-			},
-            {
-                # or condition in hash
-				# 37 is id of 'Yes' value (ITSM General Catalog - dropdown)
-                "[%]{'Version'}[%]{'$MarkField'}[%]{'Content'}" => '37',
-            },
-        ],
-		
-		);
-	
-	##this print return array
-	#print "Content-type: text/plain\n\n";
-	#print Dumper($ConfigItemIDs1);
-		
-	my @found_config_item_id;
-	push @found_config_item_id, @{$ConfigItemIDs1};
-	
-	if (!@found_config_item_id)
+	#get class id based on class name
+	my @ClassIDs;
+	foreach my $ClassName (@Class)
 	{
-	$Self->Print("<red>No config item effected...</red>\n\n");
-	exit; 
+		my $ClassID = $GeneralCatalogObject->ItemGet(
+			Class => 'ITSM::ConfigItem::Class',
+			Name  => $ClassName,
+		);
+		
+		push @ClassIDs, $ClassID->{ItemID};
 	}
 	
-	foreach my $cid (@found_config_item_id) 
+	#get deployment state id based on deployment state name
+	my @DeplStateIDs;
+	foreach my $DeplStateName (@DeplState)
+	{
+		my $DeplStateID = $GeneralCatalogObject->ItemGet(
+			Class => 'ITSM::ConfigItem::DeploymentState',
+			Name  => $DeplStateName,
+		);
+		
+		push @DeplStateIDs, $DeplStateID->{ItemID};
+	}
+
+	#create current time based on default timezone
+	my $DateTimeObject = $Kernel::OM->Create(
+        'Kernel::System::DateTime',
+        ObjectParams => {
+            TimeZone =>  Kernel::System::DateTime->SystemTimeZoneGet(), 
+        }
+    );
+
+	#
+	my $CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
+	my $DateTimeString1;
+	my $DateTimeString2 = '1989-12-'; #assign previous year values
+	my $DateTimeString3 = '1989-12-'; #assign previous year values
+	
+	if ( $CheckPeriod eq 1 )
+	{
+		my $Success1 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );	
+	}
+	elsif ( $CheckPeriod eq 2 )
+	{
+		my $Success1 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );
+		
+		my $Success2 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString2 = $DateTimeObject->Format( Format => '%Y-%m-' );	
+	}
+	
+	elsif ( $CheckPeriod eq 3 )
+	{
+		my $Success1 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );
+		
+		my $Success2 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString2 = $DateTimeObject->Format( Format => '%Y-%m-' );	
+		
+		my $Success3 = $DateTimeObject->Add( Months => 1, );
+		$DateTimeString3 = $DateTimeObject->Format( Format => '%Y-%m-' );		
+	}
+	else
+	{
+		$Self->Print("<red>Invalid Check Before Period!</red>\n");
+		return $Self->ExitCodeOk();
+	}
+	
+	#check for ticket reminder shoulld be create or not based on sent Queue parameter
+	my $CreateReminder = 0;
+	my $QueueID;
+	if ($Queue)
+	{
+		$QueueID = $Kernel::OM->Get('Kernel::System::Queue')->QueueLookup( Queue => $Queue );
+		
+		if ( !$QueueID)
+		{
+			$Self->Print("<red>Queue $Queue is not valid!</red>\n\n");
+			return $Self->ExitCodeOk();
+		}
+		else
+		{
+			$CreateReminder = 1;
+		}
+	}
+	
+	#check for valid id of deployment state (after)
+	my $DeplStateIDAfter = $GeneralCatalogObject->ItemGet(
+		Class => 'ITSM::ConfigItem::DeploymentState',
+		Name  => $DeplStateAfter,
+	);
+	
+	if ( !$DeplStateIDAfter )
+	{
+		$Self->Print("<red>Deployment State (After) $DeplStateAfter is not valid!</red>\n\n");
+		return $Self->ExitCodeOk();
+	}
+	
+	$Self->Print("<yellow>Searching effected config item based on Class: " .join(', ', @Class)."...</yellow>\n\n");		
+	my $ConfigItemIDs = $ConfigItemObject->ConfigItemSearchExtended(
+		ClassIDs     => \@ClassIDs, 
+		DeplStateIDs => \@DeplStateIDs,
+		What => [
+           # each array element is a and condition
+           {
+               # or condition in hash
+               "[%]{'Version'}[%]{'$DateField'}[%]{'Content'}" => [$CurMonth.'*', $DateTimeString1.'*', $DateTimeString2.'*', $DateTimeString3.'*'],
+		   },
+       ],
+	
+	);
+	
+	if (!@{$ConfigItemIDs})
+	{
+		$Self->Print("<red>No config item effected...</red>\n\n");
+		return $Self->ExitCodeOk();
+	}
+	
+	###this print return array
+	#use Data::Dumper;
+	#print Dumper($DeplStateIDAfter);
+	
+	foreach my $cid (@{$ConfigItemIDs}) 
 	{
 		my $LastVersion = $ConfigItemObject->VersionGet(
 				ConfigItemID => $cid,
 				XMLDataGet   => 1,
 			);
 		
-		$Self->Print("<green>found 1...$LastVersion->{Number} => $LastVersion->{Name}</green>\n\n");
-		
 		my $ShortVer = $LastVersion->{XMLData}->[1]->{Version}->[1];
 		my $ExpirationDate = $ShortVer->{$DateField}->[1]->{Content};
 		
-		$Self->Print("<green>Creating reminder ticket for...$LastVersion->{Number} => $LastVersion->{Name}</green>\n\n");
+		$Self->Print("<green>found 1...$LastVersion->{Number} => $LastVersion->{Name} with Date: $ExpirationDate. </green>");
 		
-		#Queue should be from param
-		#CREATE REMINDER TICKET
-		my $TicketID = $TicketObject->TicketCreate(
-		Title        => "Config Item for $LastVersion->{Number} || $LastVersion->{Name} is Expiring",
-		Queue        => $Queue,            
-		Lock         => 'unlock',
-		Priority     => '3 normal',       
-		State        => 'new',           
-		#Type          => 'Support',         
-		#CustomerID   => $CustomerID,
-		#CustomerUser => 'root@localhost',
-		OwnerID      => 1,
-		ResponsibleID => 1,
-		UserID       => 1,
-		);
+		if ($CreateReminder)
+		{
+			$Self->Print("<green>Creating Reminder Ticket. </green>");
+			##CREATE REMINDER TICKET
+			my $TicketID = $TicketObject->TicketCreate(
+				Title        => "Config Item for $LastVersion->{Number} || $LastVersion->{Name} is Expiring",
+				Queue        => $Queue,            
+				Lock         => 'unlock',
+				Priority     => '3 normal',       
+				State        => 'new',           
+				Type          => $Kernel::OM->Get('Kernel::Config')->Get('Ticket::Type::Default'),         
+				#CustomerID   => $CustomerID,
+				#CustomerUser => 'root@localhost',
+				OwnerID      => 1,
+				ResponsibleID => 1,
+				UserID       => 1,
+			);
+			
+			my $ArticleID = $ArticleBackendObject->ArticleCreate(
+				TicketID             => $TicketID,                             
+				SenderType           => 'system',                          
+				IsVisibleForCustomer => 0,                                
+				UserID               => 1,                              
+				From        => 'root@localhost',                       
+				To          => $Queue,            				
+				Subject     => "Config Item for $LastVersion->{Number} || $LastVersion->{Name} is Expiring", 
+				Body        => "Dear team,<br/><br/>
+				Take note that Config Item below will be expiry soon. <br/><br>
+				Number: $LastVersion->{Number}<br/>
+				Name: $LastVersion->{Name}<br/>
+				Expiry Date: $ExpirationDate<br/><br/>",                                    
+				ContentType => 'text/html; charset=utf8',
+				Loop        => 0,
+				HistoryType    => 'EmailCustomer',  # Move|AddNote|PriorityUpdate|WebRequestCustomer|...
+				HistoryComment => 'Config Item Expiring',
+				NoAgentNotify  => 0,            # if you don't want to send agent notifications, set to 1
+				##ForceNotificationToUserID => [ $PIC ],
+			);
+			
+			#$Self->Print("<green>Link ticket with...$LastVersion->{Number} || $LastVersion->{Name}\n</green>");	
+			##Link CI with the new created ticket	
+			my $True = $LinkObject->LinkAdd(
+				SourceObject => 'Ticket',
+				SourceKey    => $TicketID,
+				TargetObject => 'ITSMConfigItem',
+				TargetKey    => $LastVersion->{ConfigItemID},
+				Type         => 'RelevantTo',
+				State        => 'Valid',
+				UserID       => 1,
+			);
+			
+			$Self->Print("<green>Updating Deployment State to $DeplStateAfter\n</green>");
+			my $VersionID = $ConfigItemObject->VersionAdd(
+				ConfigItemID => $LastVersion->{ConfigItemID},
+				Name         => $LastVersion->{Name},
+				DefinitionID => $LastVersion->{DefinitionID},
+				DeplStateID  => $DeplStateIDAfter->{ItemID},
+				InciStateID  => $LastVersion->{InciStateID},
+				XMLData      => $LastVersion->{XMLData},  # (optional)
+				UserID       => 1,
+			);
 		
-		my $ArticleID = $ArticleBackendObject->ArticleCreate(
-		TicketID             => $TicketID,                             
-		SenderType           => 'system',                          
-		IsVisibleForCustomer => 0,                                
-		UserID               => 1,                              
-		From        => 'root@localhost',                       
-		To          => $Queue,            				
-		Subject     => "Config Item for $LastVersion->{Number} || $LastVersion->{Name} is Expiring", 
-		Body        => "Dear team,<br/><br/>
-		Take note that Config Item below will be expiry soon. <br/><br>
-		Number: $LastVersion->{Number}<br/>
-		Name: $LastVersion->{Name}<br/>
-		Expiry Date: $ExpirationDate<br/><br/>",                                    
-		ContentType => 'text/html; charset=utf8',
-		Loop        => 0,
-		HistoryType    => 'EmailCustomer',  # Move|AddNote|PriorityUpdate|WebRequestCustomer|...
-		HistoryComment => 'Config Item Expiring',
-		NoAgentNotify  => 0,            # if you don't want to send agent notifications, set to 1
-		#ForceNotificationToUserID => [ $PIC ],
-		);
-		
-		
-		$Self->Print("<green>Update renewal alert to No for...$LastVersion->{Number} || $LastVersion->{Name}</green>\n\n");
-		#push update new renewal alert value to no (38)
-		$ShortVer->{$MarkField}->[1]->{Content} = "38";
-		
-		my $VersionID = $ConfigItemObject->VersionAdd(
-        ConfigItemID => $LastVersion->{ConfigItemID},
-        Name         => $LastVersion->{Name},
-        DefinitionID => $LastVersion->{DefinitionID},
-        DeplStateID  => $LastVersion->{DeplStateID},
-        InciStateID  => $LastVersion->{InciStateID},
-        XMLData      => $LastVersion->{XMLData},  # (optional)
-        UserID       => 1,
-		);
-	    	
-		$Self->Print("<green>Link ticket with...$LastVersion->{Number} || $LastVersion->{Name}</green>\n\n");	
-		##Link CI with the new created ticket	
-		my $True = $LinkObject->LinkAdd(
-        SourceObject => 'Ticket',
-        SourceKey    => $TicketID,
-        TargetObject => 'ITSMConfigItem',
-        TargetKey    => $LastVersion->{ConfigItemID},
-        Type         => 'RelevantTo',
-        State        => 'Valid',
-        UserID       => 1,
-		);
-		
-	
-	}  #CLOSE FOREACH $cid
-	
+		}
+		else
+		{
+			$Self->Print("<green>No reminder...Just updating Deployment State to $DeplStateAfter\n</green>");
+			my $VersionID = $ConfigItemObject->VersionAdd(
+				ConfigItemID => $LastVersion->{ConfigItemID},
+				Name         => $LastVersion->{Name},
+				DefinitionID => $LastVersion->{DefinitionID},
+				DeplStateID  => $DeplStateIDAfter->{ItemID},
+				InciStateID  => $LastVersion->{InciStateID},
+				XMLData      => $LastVersion->{XMLData},  # (optional)
+				UserID       => 1,
+			);
+		}
+	}	
+
 	$Self->Print("<green>Done.</green>\n");
     return $Self->ExitCodeOk();
 

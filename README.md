@@ -1,47 +1,32 @@
 # OTRS-Config-Item-Notification  
 - Built for OTRS CE v 6.0.x  
-- Check Config Item expiring date and if within current month and mark with alert 'Yes', create ticket to notify agent.  
+- Check Config Item (ci) expiring date and if within current month and next 1/2/3 month , create ticket to notify agent.  
 
-	Used CPAN modules:
+1. Attributes
 	
-		use Time::Piece;
-		use DateTime;
+	- Search for effected ci based on the parameter
+	- Create a ticket
+	- Link the ticket with ci
+	- Set ci deployment state to something else
 	
+	
+2. For debug purpose, you may run the command via the console first.
 
-1. In this github, we will using *Hardware* class.  
+otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2
 
-2. Configure Config Item class to have date field and some marking field.  
-For example in Hardware class, the date field (WarrantyExpirationDate) already defined by default:  
+Example: 
 
-  		{  
-        		Key => 'WarrantyExpirationDate',  
-        		Name => Translatable('Warranty Expiration Date'),  
-        		Searchable => 1,  
-        		Input => {  
-        	    		Type => 'Date',  
-        	    		YearPeriodPast => 20,  
-        	    		YearPeriodFuture => 10,  
-        		},  
-    		},  
-		
-Then, do add these additional parameter to get 'marking field'.  
+otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --class Computer --class Hardware --date-field WarrantyExpirationDate --depl-state Production --depl-state Planned --depl-state-after Review --check-period 1 --queue Raw 
 
-	 	{  
-	 		Key => 'RenewalAlert',  
-	 		Name => Translatable('Renewal Alert'),  
-	 		Searchable => 1,  
-	 		Input => {  
-	 		    Type => 'GeneralCatalog',  
-	 		    Class => 'ITSM::ConfigItem::YesNo',  
-	 		    Translation => 1,  
-	 		    Required => 1,  
-	 		},  
-	 	},  
-
-
-So our 2 key name here is **WarrantyExpirationDate** and **RenewalAlert**  
-
-
+WHERE,
+	--class Computer						#search for ci in mention class
+	--date-field WarrantyExpirationDate 	#ci date field name that hold expiring date value
+	--depl-state Production					#also search for ci in specific deployment state
+	--depl-state-after Review				#specify the ci deployment state to be set after the check.
+	--check-period 1						#specify the lookup range (from 1 to 3) in month.
+	--queue Raw								#Optional. Specify the queue name where the reminder ticket should be create.
+	
+	
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
 
 Example:
@@ -51,31 +36,21 @@ Example:
 	Module => Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2  
 	Params => 
 	
-	--queue
-	Postmaster
-	--ci-date-field
-	WarrantyExpirationDate
-	--ci-mark-field
-	RenewalAlert
+	--class Computer						
+	--date-field WarrantyExpirationDate 	
+	--depl-state Production					
+	--depl-state-after Review				
+	--check-period 1						
+	--queue Raw				
 			
 	Schedule => 0 9 * * 1  
 	TaskName => Custom1
 
-Where,  
---queue            #Specify the queue name where the reminder ticket should be create (default: Misc).  
---ci-date-field    #Specify the config item date field that determine expiring date. #E.g: WarrantyExpirationDate  
---ci-mark-field    #Specify the config item dropdown field that determine reminder should be create or not. #E.g: RenewalAlert  
-
-
 4. Save then restart your Daemon. It will execute based on schedule value (Every week monday 9.00 am ).  
 
-5. To manually execute cron or test via Console  
+[![1.png](https://i.postimg.cc/ydxBrBzZ/1.png)](https://postimg.cc/yJMwkMx1)
 
-otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --queue Postmaster --ci-date-field WarrantyExpirationDate --ci-mark-field RenewalAlert
+[![2.png](https://i.postimg.cc/G9wC2yTF/2.png)](https://postimg.cc/FkZqC1Zz)
 
-[![donload1.png](https://i.postimg.cc/QMK8WD7T/donload1.png)](https://postimg.cc/HJHDffBY)  
-
-[![donlod2.png](https://i.postimg.cc/SsmPb7mx/donlod2.png)](https://postimg.cc/8Fn4hvF2)  
-
-[![donlod3.png](https://i.postimg.cc/NMPkC1MV/donlod3.png)](https://postimg.cc/PpYDPv1z)  
+[![2.png](https://i.postimg.cc/G9wC2yTF/2.png)](https://postimg.cc/FkZqC1Zz)
 
