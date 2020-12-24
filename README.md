@@ -1,7 +1,9 @@
 # OTRS-Config-Item-Notification  
 - Built for OTRS CE v 6.0.x  
-- Check Config Item (ci) expiring date and if within current month and next 1/2/3 month , create ticket to notify agent.  
+- Check Config Item (ci) expiring date and if within current month and next 1/2/3 month , create ticket to notify agent.   
 
+Paypal: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/MohdAzfar?locale.x=en_US)   
+  
 1. Module Behaviour
 	
 	- Search for effected ci based on the parameter
