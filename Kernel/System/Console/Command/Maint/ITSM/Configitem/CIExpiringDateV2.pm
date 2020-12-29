@@ -1,6 +1,3 @@
-# --
-#
-# --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
 # did not receive this file, see https://www.gnu.org/licenses/gpl-3.0.txt.
@@ -115,6 +112,12 @@ sub Run {
 			Name  => $ClassName,
 		);
 		
+		if ( !$ClassID )
+		{
+			$Self->Print("<red>--class $ClassName is not valid!</red>\n\n");
+			return $Self->ExitCodeOk();
+		}
+		
 		push @ClassIDs, $ClassID->{ItemID};
 	}
 	
@@ -126,6 +129,12 @@ sub Run {
 			Class => 'ITSM::ConfigItem::DeploymentState',
 			Name  => $DeplStateName,
 		);
+		
+		if ( !$DeplStateID )
+		{
+			$Self->Print("<red>--depl-state $DeplStateName is not valid!</red>\n\n");
+			return $Self->ExitCodeOk();
+		}
 		
 		push @DeplStateIDs, $DeplStateID->{ItemID};
 	}
@@ -182,7 +191,7 @@ sub Run {
 	}
 	else
 	{
-		$Self->Print("<red>Invalid Check Before Period! Accept only 0 to 3</red>\n");
+		$Self->Print("<red>--check-period  is not valid! Accept only 0 to 3</red>\n");
 		return $Self->ExitCodeOk();
 	}
 	
@@ -195,7 +204,7 @@ sub Run {
 		
 		if ( !$QueueID)
 		{
-			$Self->Print("<red>Queue $Queue is not valid!</red>\n\n");
+			$Self->Print("<red>--queue $Queue is not valid!</red>\n\n");
 			return $Self->ExitCodeOk();
 		}
 		else
@@ -212,7 +221,7 @@ sub Run {
 	
 	if ( !$DeplStateIDAfter )
 	{
-		$Self->Print("<red>Deployment State (After) $DeplStateAfter is not valid!</red>\n\n");
+		$Self->Print("<red>--depl-state-after $DeplStateAfter is not valid!</red>\n\n");
 		return $Self->ExitCodeOk();
 	}
 	
