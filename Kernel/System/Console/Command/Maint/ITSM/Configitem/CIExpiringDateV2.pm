@@ -1,3 +1,6 @@
+# --
+#
+# --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
 # did not receive this file, see https://www.gnu.org/licenses/gpl-3.0.txt.
@@ -30,7 +33,7 @@ sub Configure {
 	
 	$Self->AddOption(
         Name        => 'class',
-        Description => "Specify the config item class which this check should be perform.",
+        Description => "Specify the config item class which this check should be perform. (Accept multiple class)",
         Required    => 1,
         HasValue    => 1, 
 		ValueRegex  => qr/.*/smx,
@@ -39,7 +42,7 @@ sub Configure {
 	
 	$Self->AddOption(
         Name        => 'depl-state',
-        Description => "Specify the config item deployment state which this check should be perform.",
+        Description => "Specify the config item deployment state which this check should be perform. (Accept multiple deployment state)",
         Required    => 1,
         HasValue    => 1,
 		ValueRegex  => qr/.*/smx,
@@ -56,7 +59,7 @@ sub Configure {
 	
 	$Self->AddOption(
         Name        => 'check-period',
-        Description => "Specify the lookup range (from 1 to 3) in month.",
+        Description => "Specify the lookup range (from 0 to 3) in month. 0 = current month, 1 = next 1 month, 2 = next 2 month, 3 = next 3 month",
         Required    => 1,
         HasValue    => 1, 
 		ValueRegex  => qr/.*/smx,
@@ -72,7 +75,7 @@ sub Configure {
 	
 	$Self->AddOption(
         Name        => 'queue',
-        Description => "Specify the queue name where the reminder ticket should be create.",
+        Description => "Ticket will be create in the mention queue if this parameter is being used",
         Required    => 0,
         HasValue    => 1,  
 		ValueRegex  => qr/.*/smx,
@@ -136,18 +139,27 @@ sub Run {
     );
 
 	#
-	my $CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
-	my $DateTimeString1;
+	my $CurMonth;
+	my $DateTimeString1 = '1989-12-'; #assign previous year values;
 	my $DateTimeString2 = '1989-12-'; #assign previous year values
 	my $DateTimeString3 = '1989-12-'; #assign previous year values
 	
-	if ( $CheckPeriod eq 1 )
+	if ( $CheckPeriod eq 0 )
 	{
+		$CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
+	}
+	elsif ( $CheckPeriod eq 1 )
+	{
+		$CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
+		
 		my $Success1 = $DateTimeObject->Add( Months => 1, );
 		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );	
 	}
 	elsif ( $CheckPeriod eq 2 )
 	{
+		
+		$CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
+		
 		my $Success1 = $DateTimeObject->Add( Months => 1, );
 		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );
 		
@@ -157,6 +169,8 @@ sub Run {
 	
 	elsif ( $CheckPeriod eq 3 )
 	{
+		$CurMonth = $DateTimeObject->Format( Format => '%Y-%m-' );
+		
 		my $Success1 = $DateTimeObject->Add( Months => 1, );
 		$DateTimeString1 = $DateTimeObject->Format( Format => '%Y-%m-' );
 		
@@ -168,7 +182,7 @@ sub Run {
 	}
 	else
 	{
-		$Self->Print("<red>Invalid Check Before Period!</red>\n");
+		$Self->Print("<red>Invalid Check Before Period! Accept only 0 to 3</red>\n");
 		return $Self->ExitCodeOk();
 	}
 	
