@@ -227,6 +227,7 @@ sub Run {
                "[%]{'Version'}[%]{'$DateField'}[%]{'Content'}" => [$CurMonth.'*', $DateTimeString1.'*', $DateTimeString2.'*', $DateTimeString3.'*'],
 		   },
        ],
+	   PreviousVersionSearch => 0,
 	
 	);
 	
