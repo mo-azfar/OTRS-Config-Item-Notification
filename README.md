@@ -1,6 +1,6 @@
 # OTRS-Config-Item-Notification  
 - Built for OTRS CE v 6.0.x  
-- Check Config Item (ci) expiring date and if within current month and next 1/2/3 month , create ticket to notify agent.   
+- Check ITSM Config Item (CI) expiring date within current month or next 1/2/3 month , then change deployment state or create ticket to notify agent.  
 
 Paypal: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/MohdAzfar?locale.x=en_US)   
   
@@ -12,23 +12,18 @@ Paypal: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
 	- Set ci deployment state to something else
 	
   	
-2. For debug purpose, you may run the command via the console first.
+2. Do run the command via the console first to see mandatory and optional parameter. 
 
 		otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2
 
-Example: 
-
-	otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2 --class Computer --class Hardware 
-	--date-field WarrantyExpirationDate --depl-state Production --depl-state Planned 
-	--depl-state-after Review --check-period 1 --queue Raw 
-
 	WHERE,
-	--class Computer			#search for ci in mention class
-	--date-field WarrantyExpirationDate	#ci date field name that hold expiring date value
-	--depl-state Production			#also search for ci in specific deployment state
-	--depl-state-after Review		#specify the ci deployment state to be set after the check.
-	--check-period 1			#specify the lookup range (from 1 to 3) in month.
-	--queue Raw			#Optional. Specify the queue name where the reminder ticket should be create.
+	--class ... (--class ...)      - Specify the config item class which this check should be perform. (Accept multiple class)
+	--depl-state ... (--depl-state ...) - Specify the config item deployment state which this check should be perform. (Accept multiple deployment state)
+	--date-field ...               - Specify the config item date field name that determine expiring date.
+	--check-period ...             - Specify the lookup range (from 0 to 3) in month. 0 = current month, 1 = next 1 month, 2 = next 2 month, 3 = next 3 month
+	--depl-state-after ...         - Specify the config item deployment state to be set after the check.
+	[--queue ...]                  - Ticket will be create in the mention queue if this parameter is being used
+
 	
     	
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
@@ -40,10 +35,10 @@ Example:
 	Module => Kernel::System::Console::Command::Maint::ITSM::Configitem::CIExpiringDateV2  
 	Params => 
 	
-	--class 
+	--class
 	Computer						
-	--date-field 
-	WarrantyExpirationDate 	
+	--date-field
+	WarrantyExpirationDate
 	--depl-state 
 	Production					
 	--depl-state-after 
