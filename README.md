@@ -17,14 +17,13 @@ Paypal: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
 		otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2
 
 	WHERE,
-	--class ... (--class ...)      - Specify the config item class which this check should be perform. (Accept multiple class)
-	--depl-state ... (--depl-state ...) - Specify the config item deployment state which this check should be perform. (Accept multiple deployment state)
-	--date-field ...               - Specify the config item date field name that determine expiring date.
-	--check-period ...             - Specify the lookup range (from 0 to 3) in month. 0 = current month, 1 = next 1 month, 2 = next 2 month, 3 = next 3 month
-	--depl-state-after ...         - Specify the config item deployment state to be set after the check.
-	[--queue ...]                  - Ticket will be create in the mention queue if this parameter is being used
-
-	
+	--class ... (--class ...)      - Specify the config item class which this check should be perform. (Accept multiple class)  
+	--depl-state ... (--depl-state ...) - Specify the config item deployment state which this check should be perform. (Accept multiple deployment state)  
+	--date-field ...               - Specify the config item date field name that determine expiring date.  
+	--check-period ...             - Specify the lookup range (from 0 to 3) in month. 0 = current month, 1 = next 1 month, 2 = next 2 month, 3 = next 3 month  
+	--depl-state-after ...         - Specify the config item deployment state to be set after the check.  
+	[--queue ...]                  - Ticket will be create in the mention queue if this parameter is being used  
+  
     	
 3. Enable and configure a new custom cron at System Configuration > Daemon::SchedulerCronTaskManager::Task###Custom1
 
