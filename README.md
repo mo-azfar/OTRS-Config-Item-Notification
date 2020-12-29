@@ -15,8 +15,8 @@ Paypal: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
 2. Do run the command via the console first to see mandatory and optional parameter. 
 
 		otrs@shell > bin/otrs.Console.pl Maint::ITSM::Configitem::CIExpiringDateV2
-
-	WHERE,
+  
+	WHERE,  
 	--class ... (--class ...)      - Specify the config item class which this check should be perform. (Accept multiple class)  
 	--depl-state ... (--depl-state ...) - Specify the config item deployment state which this check should be perform. (Accept multiple deployment state)  
 	--date-field ...               - Specify the config item date field name that determine expiring date.  
